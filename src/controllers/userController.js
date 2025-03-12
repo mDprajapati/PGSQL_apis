@@ -1,58 +1,42 @@
-const pool = require("../config/db");
+const userService = require('../services/userService');
 
 // ✅ GET all users
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
   try {
-    const result = await pool.query("SELECT * FROM users");
-    res.json(result.rows);
+    const users = await userService.getAllUsers();
+    res.json(users);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    next(err);
   }
 };
 
 // ✅ POST: Add new user
-const createUser = async (req, res) => {
-  const { username, email, age } = req.body;
+const createUser = async (req, res, next) => {
   try {
-    const result = await pool.query(
-      "INSERT INTO users (username, email, age) VALUES ($1, $2, $3) RETURNING *",
-      [username, email, age]
-    );
-    res.status(201).json(result.rows[0]);
+    const user = await userService.createUser(req.body);
+    res.status(201).json(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error adding user" });
+    next(err);
   }
 };
 
 // ✅ PUT: Update user
-const updateUser = async (req, res) => {
-  const { id } = req.params;
-  const { username, email, age } = req.body;
+const updateUser = async (req, res, next) => {
   try {
-    const result = await pool.query(
-      "UPDATE users SET username = $1, email = $2, age = $3 WHERE id = $4 RETURNING *",
-      [username, email, age, id]
-    );
-    if (result.rowCount === 0) return res.status(404).json({ error: "User not found" });
-    res.json(result.rows[0]);
+    const user = await userService.updateUser(req.params.id, req.body);
+    res.json(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error updating user" });
+    next(err);
   }
 };
 
 // ✅ DELETE: Remove user
-const deleteUser = async (req, res) => {
-  const { id } = req.params;
+const deleteUser = async (req, res, next) => {
   try {
-    const result = await pool.query("DELETE FROM users WHERE id = $1 RETURNING *", [id]);
-    if (result.rowCount === 0) return res.status(404).json({ error: "User not found" });
-    res.json({ message: "User deleted", deletedUser: result.rows[0] });
+    const deletedUser = await userService.deleteUser(req.params.id);
+    res.json({ message: 'User deleted', deletedUser });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error deleting user" });
+    next(err);
   }
 };
 

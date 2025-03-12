@@ -9,8 +9,27 @@ const pool = new Pool({
   port: process.env.DB_PORT || 5432, // Default PostgreSQL port
 });
 
+const fs = require('fs');
+const path = require('path');
+
+const createTables = async () => {
+  try {
+    const createTablesSQL = fs.readFileSync(
+      path.join(__dirname, 'create_tables.sql'),
+      'utf8'
+    );
+    await pool.query(createTablesSQL);
+    console.log('✅ Tables created successfully');
+  } catch (err) {
+    console.error('❌ Error creating tables:', err);
+  }
+};
+
 pool.connect()
-  .then(() => console.log("✅ Connected to PostgreSQL"))
+  .then(() => {
+    console.log("✅ Connected to PostgreSQL");
+    createTables();
+  })
   .catch(err => console.error("❌ Connection error", err));
 
 module.exports = pool;
